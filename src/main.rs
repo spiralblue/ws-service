@@ -5,6 +5,6 @@ fn main() {
     //     - get time remaining in session
     //     - get startup command
     //     - (ground) set startup command
-    //     - (ground) get time remaining in session (if not something that can be determined on board)
+    //     - (ground) set time remaining in session (if not something that can be determined on board)
     println!("Hello, world!");
 }
