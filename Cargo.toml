@@ -6,4 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ws-api = { git = "ssh://git@github.com/spiralblue/ws-api.git", version = "0.1.0" }
+chrono = "0.4.26"
+log = "0.4.14"
+uart-rs = { git = "ssh://git@github.com/Cube-OS/uart-rs.git", version = "0.2.0" }
+serial = "0.4.0"
+failure = "0.1.8"
+serde = "1.0"
+# ws-api = { git = "ssh://git@github.com/spiralblue/ws-api.git", version = "0.1.0" }
+ws-api = { path = "../ws-api" }
+cubeos-service = { git = "ssh://git@github.com/Cube-OS/cubeos-service"}
+
+[features]
+default = []
+ground = ['cubeos-service/ground']
+terminal = ['cubeos-service/terminal']
+debug = ['cubeos-service/debug']
