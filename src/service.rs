@@ -35,5 +35,6 @@ service_macro! {
         mutation: Time => fn time(&self) -> Result<()>;
         mutation: StartupCommand => fn startup_command(&self, cmd: Vec<u8>) -> Result<()>;
         mutation: Shutdown => fn shutdown(&self, time_remaining_s: u16) -> Result<()>;
+        mutation: Ftp => fn ftp(&self) -> Result<()>;
     }
 }

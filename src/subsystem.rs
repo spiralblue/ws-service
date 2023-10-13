@@ -111,6 +111,10 @@ impl Subsystem {
         }
     }
 
+    pub fn ftp(&self) -> UartResult<()> {
+        Ok(self.spiralblue.lock().unwrap().ftp()?)
+    }
+
     fn wait_for_message(
         &self,
         message_type: CommandType,
