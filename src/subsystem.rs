@@ -75,20 +75,20 @@ impl Subsystem {
     }
 
     pub fn time(&self) -> UartResult<()> {
-        let SBCommand = SBCommand::time(Utc::now());
+        let sb_command = SBCommand::time(Utc::now());
         info!("Send Time: {:?}", SBCommand.data);
         Ok(self.send_message_with_acknowledgment(
-            SBCommand,
+            sb_command,
             CommandType::TimeAcknowledge,
             ACKNOWLEDGE_MESSAGE_TIMEOUT,
         )?)
     }
 
     pub fn startup_command(&self, cmd: Vec<u8>) -> UartResult<()> {
-        let SBCommand = SBCommand::startup_command(cmd);
+        let sb_command = SBCommand::startup_command(cmd);
         info!("Send Startup SBCommand: {:?}", SBCommand.data);
         Ok(self.send_message_with_acknowledgment(
-            SBCommand,
+            sb_command,
             CommandType::StartupCommandAcknowledge,
             ACKNOWLEDGE_MESSAGE_TIMEOUT,
         )?)
