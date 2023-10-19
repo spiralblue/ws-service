@@ -21,7 +21,7 @@ fn main() -> UartResult<()> {
     Logger::init();
     info!("Start Spiral Blue Service");
 
-    let service_config = Config::new("spiralblue-service")
+    let service_config = Config::new("spiral-blue-service")
         .map_err(|err| {
             error!("Failed to load service config: {:?}", err);
             err

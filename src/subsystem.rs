@@ -27,6 +27,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Instant,Duration};
 use log::{error, info};
 use chrono::prelude::*;
+use std::io::Read;
 
 const POWER_UP_ALLOWANCE: Duration = Duration::from_secs(60 * 5);
 const ACKNOWLEDGE_MESSAGE_TIMEOUT: Duration = Duration::from_secs(60 * 1);
@@ -58,7 +59,7 @@ impl Subsystem {
                 uart_path,
                 uart_setting,
                 uart_timeout,
-            ))),
+            )?)),
         })
     }
 
@@ -74,9 +75,42 @@ impl Subsystem {
         }
     }
 
+    // match self.spiralblue.lock().unwrap().receive_init(POWER_UP_ALLOWANCE) {
+    //     Ok(data) => {
+    //         let last_three_bytes = data.split_off(data.len() - 3);
+    //         println!("Received: {:?}", data);
+    //         println!("Last three bytes: {:?}", last_three_bytes)
+    //         if let Some(received_command) = SBCommand::from_bytes(last_three_bytes) {
+    //             if received_command.command_type == CommandType::Initialised {
+    //                 info!("Initialised");
+    //                 Ok(self.spiralblue.lock().unwrap().send_message(
+    //                     SBCommand::simple_command(CommandType::InitialisedAcknowledge)
+    //                 )?)
+    //             } else {
+    //                 Err(UartError::from(std::io::Error::new(
+    //                     std::io::ErrorKind::InvalidData,
+    //                     format!(
+    //                         "Received {:?} instead of {:?}",
+    //                         received_command, CommandType::Initialised
+    //                     ),
+    //                 )))
+    //             }
+    //         } else {
+    //             Err(UartError::from(std::io::Error::new(
+    //                 std::io::ErrorKind::InvalidData,
+    //                 format!(
+    //                     "Received {:?} instead of {:?}",
+    //                     data, CommandType::Initialised
+    //                 ),
+    //             )))
+    //         }
+    //     }
+    //     Err(e) => Err(e.into()),
+    // }
+
     pub fn time(&self) -> UartResult<()> {
         let sb_command = SBCommand::time(Utc::now());
-        info!("Send Time: {:?}", SBCommand.data);
+        info!("Send Time: {:?}", sb_command.data);
         Ok(self.send_message_with_acknowledgment(
             sb_command,
             CommandType::TimeAcknowledge,
@@ -86,7 +120,7 @@ impl Subsystem {
 
     pub fn startup_command(&self, cmd: Vec<u8>) -> UartResult<()> {
         let sb_command = SBCommand::startup_command(cmd);
-        info!("Send Startup SBCommand: {:?}", SBCommand.data);
+        info!("Send Startup SBCommand: {:?}", sb_command.data);
         Ok(self.send_message_with_acknowledgment(
             sb_command,
             CommandType::StartupCommandAcknowledge,
@@ -121,7 +155,7 @@ impl Subsystem {
         timeout: Duration,
     ) -> UartResult<()> {
         match self.spiralblue.lock().unwrap().receive_message(timeout) {
-            Some(message) => {
+            Ok(Some(message)) => {
                 if message.command_type == message_type {
                     Ok(())
                 } else {
@@ -134,7 +168,7 @@ impl Subsystem {
                     )))
                 }
             }
-            None => Err(UartError::from(std::io::Error::new(
+            _ => Err(UartError::from(std::io::Error::new(
                 std::io::ErrorKind::TimedOut,
                 format!(
                     "Did not receive message of type {:?} in time",
@@ -154,13 +188,13 @@ impl Subsystem {
             Ok(()) => {
                 match self.wait_for_message(
                     expected_acknowledgment_type,
-                    ACKNOWLEDGE_MESSAGE_TIMEOUT,
+                    timeout,
                 ) {
                     Ok(()) => Ok(()),
                     Err(e) => Err(e),
                 }
             }
-            Err(e) => Err(e),
+            Err(e) => Err(e.into()),
         }
     }
 }
