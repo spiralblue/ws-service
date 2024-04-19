@@ -63,50 +63,53 @@ impl Subsystem {
         })
     }
 
+    // pub fn initialised(&self) -> UartResult<()> {
+    //     match self.wait_for_message(CommandType::Initialised, POWER_UP_ALLOWANCE) {
+    //         Ok(()) => {
+    //             info!("Initialised");
+    //             Ok(self.spiralblue.lock().unwrap().send_message(
+    //                 SBCommand::simple_command(CommandType::InitialisedAcknowledge)
+    //             )?)
+    //         }
+    //         Err(e) => Err(e),
+    //     }
+    // }
+
     pub fn initialised(&self) -> UartResult<()> {
-        match self.wait_for_message(CommandType::Initialised, POWER_UP_ALLOWANCE) {
-            Ok(()) => {
-                info!("Initialised");
-                Ok(self.spiralblue.lock().unwrap().send_message(
-                    SBCommand::simple_command(CommandType::InitialisedAcknowledge)
-                )?)
+        match self.spiralblue.lock().unwrap().receive_init(POWER_UP_ALLOWANCE) {
+            Ok(mut data) => {
+                let last_three_bytes = data.split_off(data.len() - 3);
+                println!("Received: {:?}", data);
+                println!("Last three bytes: {:?}", last_three_bytes);
+                if let Some(received_command) = SBCommand::from_bytes(last_three_bytes) {
+                    if received_command.command_type == CommandType::Initialised {
+                        info!("Initialised");
+                        Ok(())
+                        // Ok(self.spiralblue.lock().unwrap().send_message(
+                        //     SBCommand::simple_command(CommandType::InitialisedAcknowledge)
+                        // )?)
+                    } else {
+                        Err(UartError::from(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            format!(
+                                "Received {:?} instead of {:?}",
+                                received_command, CommandType::Initialised
+                            ),
+                        )))
+                    }
+                } else {
+                    Err(UartError::from(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!(
+                            "Received {:?} instead of {:?}",
+                            data, CommandType::Initialised
+                        ),
+                    )))
+                }
             }
-            Err(e) => Err(e),
+            Err(e) => Err(e.into()),
         }
     }
-
-    // match self.spiralblue.lock().unwrap().receive_init(POWER_UP_ALLOWANCE) {
-    //     Ok(data) => {
-    //         let last_three_bytes = data.split_off(data.len() - 3);
-    //         println!("Received: {:?}", data);
-    //         println!("Last three bytes: {:?}", last_three_bytes)
-    //         if let Some(received_command) = SBCommand::from_bytes(last_three_bytes) {
-    //             if received_command.command_type == CommandType::Initialised {
-    //                 info!("Initialised");
-    //                 Ok(self.spiralblue.lock().unwrap().send_message(
-    //                     SBCommand::simple_command(CommandType::InitialisedAcknowledge)
-    //                 )?)
-    //             } else {
-    //                 Err(UartError::from(std::io::Error::new(
-    //                     std::io::ErrorKind::InvalidData,
-    //                     format!(
-    //                         "Received {:?} instead of {:?}",
-    //                         received_command, CommandType::Initialised
-    //                     ),
-    //                 )))
-    //             }
-    //         } else {
-    //             Err(UartError::from(std::io::Error::new(
-    //                 std::io::ErrorKind::InvalidData,
-    //                 format!(
-    //                     "Received {:?} instead of {:?}",
-    //                     data, CommandType::Initialised
-    //                 ),
-    //             )))
-    //         }
-    //     }
-    //     Err(e) => Err(e.into()),
-    // }
 
     pub fn time(&self) -> UartResult<()> {
         let sb_command = SBCommand::time(Utc::now());
@@ -191,14 +194,16 @@ impl Subsystem {
                     timeout,
                 ) {
                     Ok(()) => Ok(()),
-                    Err(e) => Err(e),
+                    Err(e) => {
+                        error!("{:?}",e);
+                        Err(e.into())
+                    }
                 }
             }
-            Err(e) => Err(e.into()),
+            Err(e) => {
+                error!("{:?}",e);
+                Err(e.into())
+            }
         }
     }
 }
-
-
-
-
