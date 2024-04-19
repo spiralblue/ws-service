@@ -1,0 +1,11 @@
+# Ground Segment
+[spiralblue-service]
+uart_bus = "/dev/ttyS0" #placeholder only
+uart_timeout = '100'
+udp_socket = '10.0.2.141:8044'
+target = '10.0.2.20:8044'
+
+# Space Segment
+[spiralblue-service.addr]
+ip = "0.0.0.0"
+port = 8044
